@@ -4,6 +4,8 @@ import { AppModule } from './app.module';
 import { join } from 'path';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
+import { AuthModule } from './auth/auth.module';
+import { AuthGuard } from '@nestjs/passport';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -13,8 +15,11 @@ async function bootstrap() {
   app.setViewEngine('ejs');
   app.useGlobalPipes(new ValidationPipe());
 
+
   const configService = app.get(ConfigService);
   const port = configService.get('PORT');
+
+  app.enableCors();
 
   await app.listen(port);
 }

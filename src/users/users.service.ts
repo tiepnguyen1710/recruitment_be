@@ -27,6 +27,10 @@ export class UsersService {
     return user;
   }
 
+  IsCorrectPassword(password : string, hash : string) : boolean{
+    return bcrypt.compareSync(password, hash);
+  }
+
   findAll() {
     return `This action returns all users`;
   }
@@ -39,6 +43,19 @@ export class UsersService {
       if (!user) {
         throw new Error('User not found'); 
       }
+      return user;
+    } catch (error) {
+      throw new Error(`Failed to retrieve user: ${error.message}`);
+    }
+  }
+
+  async findOneByEmail(email : string) : Promise<User | undefined>{
+    try {
+      let user = this.userModel.findOne({email : email});
+      if (!user) {
+        throw new Error('User not found'); 
+      }
+
       return user;
     } catch (error) {
       throw new Error(`Failed to retrieve user: ${error.message}`);
