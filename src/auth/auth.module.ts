@@ -8,19 +8,22 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './passport/jwt.strategy';
 import ms from 'ms';
 import { AuthController } from './auth.controller';
+import { MongooseModule } from '@nestjs/mongoose';
+import { User, UserSchema } from 'src/users/schemas/user.schema';
 
 @Module({
   imports: [UsersModule, PassportModule,
-      JwtModule.registerAsync({
-        imports: [ConfigModule],
-        useFactory: async (configService: ConfigService) => ({
-          secret: configService.get<string>('SECRET_KEY_ACCESS'),
-          signOptions: {
-              expiresIn: ms(configService.get<string>('EXPIRE_IN_ACCESS')),
-          },
-        }),
-        inject: [ConfigService],
-      }),],
+            JwtModule.registerAsync({
+              imports: [ConfigModule],
+              useFactory: async (configService: ConfigService) => ({
+                secret: configService.get<string>('SECRET_KEY_ACCESS'),
+                signOptions: {
+                    expiresIn: ms(configService.get<string>('EXPIRE_IN_ACCESS')),
+                },
+              }),
+              inject: [ConfigService],
+            }),
+        ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy],
   exports: [AuthService]
