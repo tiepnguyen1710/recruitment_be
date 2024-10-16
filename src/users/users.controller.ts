@@ -7,6 +7,7 @@ import { User, UserDocument } from './schemas/user.schema';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
+
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService,
@@ -17,7 +18,7 @@ export class UsersController {
   // create(@Body() createUserDto: CreateUserDto) {
   create(@Body() createUserDto : CreateUserDto){
     //console.log(createUserDto);
-    return this.usersService.create(createUserDto);
+    return this.usersService.create(createUserDto, );
   }
 
   @Get()
