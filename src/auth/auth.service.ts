@@ -1,18 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { IUser } from 'src/users/users.interface';
 import { RegisterUserDto } from 'src/users/dto/create-user.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from 'src/users/schemas/user.schema';
-import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
+import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
+import ms from 'ms';
 
 @Injectable()
 export class AuthService {
     constructor(private usersService: UsersService,
             private jwtService: JwtService,
-            @InjectModel(User.name)
-    private readonly userModel: SoftDeleteModel<UserDocument>) {}
+            private configService : ConfigService) {}
 
     async validateUser(username: string, pass: string): Promise<any> {
         const user = await this.usersService.findOneByEmail(username);
@@ -24,8 +23,9 @@ export class AuthService {
         return null;
     }
 
-    async login(user: IUser) {
-        const { _id, name, email, role } = user;
+    async login(user: IUser , res : Response) {
+        let { _id, name, email, role } = user;
+
         const payload = { 
             sub: "token login",
             iss: "from server",
@@ -34,6 +34,16 @@ export class AuthService {
             email,
             role
         };
+
+        let refresh_token = this.createRefreshToken(payload);
+
+        await this.usersService.assignRefreshToken(refresh_token, _id);
+
+        res.cookie('refresh_token', refresh_token, {
+            httpOnly : true,
+            maxAge : ms(this.configService.get<string>('EXPIRE_IN_REFRESH'))
+        });
+
         return {
           access_token: this.jwtService.sign(payload),
           _id,
@@ -43,27 +53,77 @@ export class AuthService {
         };
       }
 
-    async register(registerUserDto : RegisterUserDto){
-        let existEmail = await this.userModel.findOne({email : registerUserDto.email});
-        if(existEmail){
-            return {
+    async register(user : RegisterUserDto){
+        const newUser = await this.usersService.register(user);
 
-            }
+        return {
+            _id : newUser._id,
+            name : newUser.name
         }
+    }
 
-        else {
-            let hashPassword = this.usersService.getHashPassword(registerUserDto.password);
+    createRefreshToken (payload) {
+        const refresh_token = this.jwtService.sign(payload, {
+            secret : this.configService.get<string>('SECRET_KEY_REFRESH'),
+            expiresIn : this.configService.get<string>('EXPIRE_IN_REFRESH')
+        })
 
-            let user = await this.userModel.create({
-                ...registerUserDto,
-                password : hashPassword
+        return refresh_token;
+    }
+
+    async processRefresh (refresh_token : string, res : Response){
+        try {
+            this.jwtService.verify(refresh_token, {
+                secret : this.configService.get<string>('SECRET_KEY_REFRESH')
             })
 
-            return {
-                _id : user._id,
-                createdAt : user.createdAt
+            let user = await this.usersService.checkRefreshTokenUser(refresh_token)
+            if(user){
+                let { _id, name, email, role } = user;
+
+                const payload = { 
+                    sub: "token refresh",
+                    iss: "from server",
+                    _id,
+                    name,
+                    email,
+                    role
+                };
+
+                let new_refresh_token = this.createRefreshToken(payload);
+
+                await this.usersService.assignRefreshToken(new_refresh_token, _id.toString());
+
+                res.clearCookie('refresh_token');
+
+                res.cookie('refresh_token', new_refresh_token, {
+                    httpOnly : true,
+                    maxAge : ms(this.configService.get<string>('EXPIRE_IN_REFRESH'))
+                });
+
+                return {
+                access_token: this.jwtService.sign(payload),
+                user: {
+                    _id,
+                    name,
+                    email,
+                    role
+                }
+                
+                };
             }
+            else{
+                throw new BadRequestException("Refresh token invalid");
+            }
+            
+        } catch (error) {
+            throw new BadRequestException("Refresh token invalid");
         }
-        
+    }
+
+    async logout (res : Response, user : IUser) {
+        await this.usersService.assignRefreshToken("", user._id);
+        res.clearCookie('refresh_token');
+        return "Logout successful";
     }
 }
