@@ -25,8 +25,8 @@ export class UsersController {
 
   @Get()
   //@UseGuards(RolesGuard)
-  findAll(@Query('page') currentpage : string,
-        @Query('limit') limit : string,
+  findAll(@Query('current') currentpage : string,
+        @Query('pageSize') limit : string,
         @Query() qs : string) {
     return this.usersService.findAll(+currentpage, +limit, qs);
   }

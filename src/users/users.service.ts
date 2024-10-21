@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { CreateUserDto, RegisterUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schemas/user.schema';
@@ -19,14 +19,42 @@ export class UsersService {
     const hash = bcrypt.hashSync(password, salt);
     return hash;
   }
+
+  async assignRefreshToken (refreshToken : string, _id : string){
+    return await this.userModel.updateOne({
+      _id
+    }, {
+      refreshToken
+    })
+  }
+
+  async checkRefreshTokenUser (refresh_token: string){
+    return await this.userModel.findOne({refreshToken : refresh_token})
+  }
+
+  async register (registerUserDto : RegisterUserDto){
+    let existEmail = await this.userModel.findOne({email : registerUserDto.email});
+        if(existEmail){
+            throw new BadRequestException(`Email ${existEmail} is existed`);
+        }
+
+        else {
+            let hashPassword = this.getHashPassword(registerUserDto.password);
+
+            let user = await this.userModel.create({
+                ...registerUserDto,
+                password : hashPassword
+            })
+
+            return user;
+        }
+  }
   
   // create(createUserDto: CreateUserDto) {
   async create(createUserDto : CreateUserDto, currentUser : IUser) {
     let existEmail = await this.userModel.findOne({email : createUserDto.email});
         if(existEmail){
-            return {
-
-            }
+          throw new BadRequestException(`Email ${existEmail} is existed`);
         }
 
     const hashPassword = this.getHashPassword(createUserDto.password);
@@ -50,7 +78,9 @@ export class UsersService {
 
   async findAll(currentPage : number, limit : number, qs : string) {
     const { filter, sort, projection, population } = aqp(qs);
-    delete filter.page
+    delete filter.current
+    delete filter.pageSize
+    
     console.log(filter);
     let offset = (+currentPage - 1) * +limit;
     let defaultLimit = +limit ? +limit : 5;
