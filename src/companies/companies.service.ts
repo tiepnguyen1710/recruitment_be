@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { Company, CompanyDocument } from './schemas/company.schema';
@@ -28,9 +28,9 @@ export class CompaniesService {
 
   async findAll(currentPage: number, limit: number, qs: string) {
     const { filter, sort, projection, population } = aqp(qs);
-    delete filter.current
-    delete filter.pageSize
-    
+    delete filter.current;
+    delete filter.pageSize;
+
     let offset = (+currentPage - 1) * +limit;
     let defaultLimit = +limit ? +limit : 10;
     //console.log(offset, defaultLimit, filter);
@@ -47,17 +47,24 @@ export class CompaniesService {
 
     return {
       meta: {
-        current: currentPage, 
-        pageSize: limit, 
-        pages: totalPages, 
+        current: currentPage,
+        pageSize: limit,
+        pages: totalPages,
         total: totalItems,
       },
-      result, 
+      result,
     };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} company`;
+  async findOne(id: string) {
+    try {
+      const company = await this.companyModel.findOne({ _id: id });
+      return {
+        company: company,
+      };
+    } catch (error) {
+      throw new BadRequestException('Fetch company by id error');
+    }
   }
 
   async update(id: string, updateCompanyDto: UpdateCompanyDto, user: IUser) {
