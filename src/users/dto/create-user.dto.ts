@@ -1,64 +1,84 @@
-import { Type } from "class-transformer";
-import { IsEmail, IsNotEmpty, IsNotEmptyObject, IsObject, ValidateNested } from "class-validator";
-import mongoose from "mongoose";
+import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsNotEmptyObject,
+  IsObject,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+import mongoose from 'mongoose';
 
-class Company{
-    @IsNotEmpty()
-    _id : mongoose.Schema.Types.ObjectId;
+class Company {
+  @IsNotEmpty()
+  _id: mongoose.Schema.Types.ObjectId;
 
-    @IsNotEmpty()
-    name: string;
+  @IsNotEmpty()
+  name: string;
 }
 
 export class CreateUserDto {
-    @IsEmail()
-    @IsNotEmpty()
-    email : string;
-    
-    @IsNotEmpty()
-    password : string;
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
 
-    @IsNotEmpty()
-    name : string;
+  @IsNotEmpty()
+  password: string;
 
-    @IsNotEmpty()
-    address : string
+  @IsNotEmpty()
+  name: string;
 
-    @IsNotEmpty()
-    age : number;
+  @IsNotEmpty()
+  address: string;
 
-    @IsNotEmpty()
-    gender: string;
+  @IsNotEmpty()
+  age: number;
 
-    @IsNotEmpty()
-    role : string;
+  @IsNotEmpty()
+  gender: string;
 
-    
-    @IsNotEmptyObject()
-    @IsObject()
-    @ValidateNested()
-    @Type(() => Company)
-    company!: Company;
+  @IsNotEmpty()
+  role: string;
+
+  @IsNotEmptyObject()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => Company)
+  company!: Company;
 }
 
 export class RegisterUserDto {
-    @IsEmail()
-    @IsNotEmpty()
-    email : string;
-    
-    @IsNotEmpty()
-    password : string;
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
 
-    @IsNotEmpty()
-    name : string;
+  @IsNotEmpty()
+  password: string;
 
-    @IsNotEmpty()
-    address : string;
+  @IsNotEmpty()
+  name: string;
 
-    @IsNotEmpty()
-    age : number;
+  @IsNotEmpty()
+  address: string;
 
-    @IsNotEmpty()
-    gender: string;
+  @IsNotEmpty()
+  age: number;
 
+  @IsNotEmpty()
+  gender: string;
+}
+
+export class UserLoginDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({ example: 'kkk', description: 'abc' })
+  readonly username: string;
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 'kkk',
+    description: 'abc',
+  })
+  readonly password: string;
 }

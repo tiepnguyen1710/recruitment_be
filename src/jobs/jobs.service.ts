@@ -16,6 +16,7 @@ export class JobsService {
 
   async create(createJobDto: CreateJobDto, currentUser: IUser) {
     console.log(createJobDto);
+    console.log('current user', currentUser);
     const {
       name,
       skills,
@@ -86,9 +87,7 @@ export class JobsService {
   async findOne(id: string) {
     try {
       const job = await this.jobModel.findOne({ _id: id });
-      return {
-        job,
-      };
+      return job;
     } catch (error) {
       throw new BadRequestException('Find job error');
     }

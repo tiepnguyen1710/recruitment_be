@@ -45,10 +45,12 @@ export class CompaniesService {
       .populate(population)
       .exec();
 
+    //console.log(currentPage, limit);
+
     return {
       meta: {
-        current: currentPage,
-        pageSize: limit,
+        current: currentPage ? currentPage : 1,
+        pageSize: limit ? limit : 5,
         pages: totalPages,
         total: totalItems,
       },

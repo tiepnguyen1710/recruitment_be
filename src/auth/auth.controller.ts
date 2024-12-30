@@ -12,19 +12,23 @@ import { Public, ResponseMessage, User } from 'src/decorators/customize';
 import { LocalAuthGuard } from './local-auth.guard';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
-import { RegisterUserDto } from 'src/users/dto/create-user.dto';
+import { RegisterUserDto, UserLoginDto } from 'src/users/dto/create-user.dto';
 import { Request, Response } from 'express';
 import { IUser } from 'src/users/users.interface';
+import { RolesService } from 'src/roles/roles.service';
+import { ApiBody } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private configService: ConfigService,
     private authService: AuthService,
+    private roleService: RolesService,
   ) {}
 
   @Public()
   @UseGuards(LocalAuthGuard)
+  @ApiBody({ type: UserLoginDto })
   @Post('login')
   async login(@Req() req, @Res({ passthrough: true }) res: Response) {
     return this.authService.login(req.user, res);
@@ -40,7 +44,9 @@ export class AuthController {
   // @UseGuards(JwtAuthGuard)
   @Get('account')
   @ResponseMessage('Get user information')
-  getProfile(@User() user: IUser) {
+  async getProfile(@User() user: IUser) {
+    const tmp = (await this.roleService.findOne(user.role?._id)) as any;
+    user.permissions = tmp.permissions;
     return { user };
   }
 

@@ -45,7 +45,9 @@ export class ResumesService {
   }
 
   async findAll(currentPage: number, limit: number, qs: string) {
+    console.log(qs);
     const { filter, sort, projection, population } = aqp(qs);
+    console.log(population, projection);
     delete filter.current;
     delete filter.pageSize;
 
@@ -60,7 +62,10 @@ export class ResumesService {
       .skip(offset)
       .limit(defaultLimit)
       .sort(sort as any)
-      .populate(population)
+      .populate([
+        { path: 'companyId', select: { _id: 1, name: 1 } },
+        { path: 'jobId', select: { _id: 1, name: 1 } },
+      ])
       .select(projection as any)
       .exec();
 
@@ -137,7 +142,19 @@ export class ResumesService {
   async getAllByUser(currentUser: IUser) {
     try {
       const id = currentUser._id;
-      const resumes = await this.resumeModel.find({ userId: id });
+      const resumes = await this.resumeModel
+        .find({ userId: id })
+        .sort('-createdAt')
+        .populate([
+          {
+            path: 'companyId',
+            select: { name: 1 },
+          },
+          {
+            path: 'jobId',
+            select: { name: 1 },
+          },
+        ]);
       return resumes;
     } catch (error) {
       throw new BadRequestException(`Update status CV ${error}`);

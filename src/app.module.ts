@@ -11,6 +11,11 @@ import { CompaniesModule } from './companies/companies.module';
 import { JobsModule } from './jobs/jobs.module';
 import { FilesModule } from './files/files.module';
 import { ResumesModule } from './resumes/resumes.module';
+import { PermissionsModule } from './permissions/permissions.module';
+import { RolesModule } from './roles/roles.module';
+import { DatabasesModule } from './databases/databases.module';
+import { SubscribersModule } from './subscribers/subscribers.module';
+import { MailModule } from './mail/mail.module';
 const { softDeletePlugin } = require('soft-delete-plugin-mongoose');
 
 
@@ -34,7 +39,12 @@ const { softDeletePlugin } = require('soft-delete-plugin-mongoose');
             CompaniesModule,
             JobsModule,
             FilesModule,
-            ResumesModule],
+            ResumesModule,
+            PermissionsModule,
+            RolesModule,
+            DatabasesModule,
+            SubscribersModule,
+            MailModule],
   controllers: [AppController],
   providers: [AppService, 
     {
