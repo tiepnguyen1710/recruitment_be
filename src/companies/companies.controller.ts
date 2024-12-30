@@ -31,6 +31,7 @@ export class CompaniesController {
     @Query('pageSize') limit: string,
     @Query() qs: string,
   ) {
+    console.log(currentPage, limit);
     return this.companiesService.findAll(+currentPage, +limit, qs);
   }
 
